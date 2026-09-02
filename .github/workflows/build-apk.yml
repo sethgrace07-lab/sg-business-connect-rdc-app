@@ -1,0 +1,51 @@
+name: Build SG BUSINESS CONNECT RDC APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-apk:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Télécharger le projet
+        uses: actions/checkout@v4
+
+      - name: Installer Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.35.0'
+          channel: stable
+          cache: true
+
+      - name: Extraire le projet
+        run: |
+          unzip -q SG_BUSINESS_CONNECT_RDC_MVP_v1.5_DEEPLINK_AUTH.zip -d project
+          find project -maxdepth 2 -type f | head -50
+
+      - name: Préparer le projet Flutter
+        run: |
+          PROJECT_DIR=$(find project -name pubspec.yaml -printf '%h\n' | head -1)
+          echo "PROJECT_DIR=$PROJECT_DIR" >> $GITHUB_ENV
+          cd "$PROJECT_DIR"
+          flutter create --platforms=android .
+          flutter pub get
+
+      - name: Construire APK
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_PUBLISHABLE_KEY: ${{ secrets.SUPABASE_PUBLISHABLE_KEY }}
+        run: |
+          cd "$PROJECT_DIR"
+          flutter build apk --release \
+            --dart-define=SUPABASE_URL="$SUPABASE_URL" \
+            --dart-define=SUPABASE_PUBLISHABLE_KEY="$SUPABASE_PUBLISHABLE_KEY"
+
+      - name: Publier APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: SG-BUSINESS-CONNECT-RDC-APK
+          path: ${{ env.PROJECT_DIR }}/build/app/outputs/flutter-apk/app-release.apk
