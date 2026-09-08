@@ -95,6 +95,35 @@ jobs:
         run: |
           flutter clean
           flutter pub get
+      - name: Corriger les erreurs Dart connues
+        working-directory: ${{ steps.project.outputs.project_dir }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+
+          candidates = list(Path('.').rglob('login_page.dart'))
+          for login in candidates:
+              text = login.read_text()
+              old = "Text('Impossible d'envoyer le lien : $e')"
+              new = 'Text("Impossible d\'envoyer le lien : $e")'
+              if old in text:
+                  login.write_text(text.replace(old, new, 1))
+                  print(f"Correction appliquée : {login}")
+
+          candidates = list(Path('.').rglob('wallet_service.dart'))
+          for wallet in candidates:
+              text = wallet.read_text()
+              old = ".eq('wallet_id', await _walletId(user.id))"
+              new = ".eq('wallet_id', await _walletId(user.id) ?? (throw Exception('Wallet ID introuvable')))"
+              if old in text:
+                  wallet.write_text(text.replace(old, new, 1))
+                  print(f"Correction appliquée : {wallet}")
+
+          PY
+
+          dart format lib
+          flutter analyze
 
       - name: Vérifier les secrets Supabase
         env:
