@@ -142,7 +142,7 @@ jobs:
 
           echo "Les secrets Supabase sont disponibles."
 
-      - name: Configurer le Deep Link
+            - name: Configurer le Deep Link
         working-directory: ${{ steps.project.outputs.project_dir }}
         shell: bash
         run: |
@@ -150,32 +150,31 @@ jobs:
           from pathlib import Path
 
           manifest = Path("android/app/src/main/AndroidManifest.xml")
-
           text = manifest.read_text()
 
-          text = text.replace(
-              '<activity\n',
-              '<activity\n'
-              '            android:name=".MainActivity"\n'
-              '            android:exported="true"\n',
-              1
-          )
+          # Utiliser app_links : désactiver le deep linking automatique de Flutter
+          if "flutter_deeplinking_enabled" not in text:
+              text = text.replace(
+                  "</activity>",
+                  """              <meta-data
+                  android:name="flutter_deeplinking_enabled"
+                  android:value="false" />
 
-          intent_filter = '''
               <intent-filter>
                   <action android:name="android.intent.action.VIEW" />
                   <category android:name="android.intent.category.DEFAULT" />
                   <category android:name="android.intent.category.BROWSABLE" />
-                  <data android:scheme="sgbusinessconnect" android:host="auth" android:path="/callback/" />
+                  <data
+                      android:scheme="sgbusinessconnect"
+                      android:host="auth"
+                      android:path="/callback/" />
               </intent-filter>
-          '''
-
-          marker = '</activity>'
-
-          if 'android:scheme="sgbusinessconnect"' not in text:
-              text = text.replace(marker, intent_filter + '\n        ' + marker, 1)
+                  </activity>""",
+                  1
+              )
 
           manifest.write_text(text)
+          print("Deep Link configuré : sgbusinessconnect://auth/callback/")
           PY
 
       - name: Construire APK Release
