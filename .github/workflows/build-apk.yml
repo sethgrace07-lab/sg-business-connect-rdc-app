@@ -142,7 +142,7 @@ jobs:
 
           echo "Les secrets Supabase sont disponibles."
 
-            - name: Configurer le Deep Link
+      - name: Configurer le Deep Link
         working-directory: ${{ steps.project.outputs.project_dir }}
         shell: bash
         run: |
@@ -175,7 +175,7 @@ jobs:
 
           manifest.write_text(text)
           print("Deep Link configuré : sgbusinessconnect://auth/callback/")
-          PY
+          PY 
 
       - name: Construire APK Release
         working-directory: ${{ steps.project.outputs.project_dir }}
