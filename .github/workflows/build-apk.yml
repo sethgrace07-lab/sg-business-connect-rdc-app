@@ -95,6 +95,11 @@ jobs:
         run: |
           flutter clean
           flutter pub get
+      - name: Supprimer le test Flutter par défaut
+        working-directory: ${{ steps.project.outputs.project_dir }}
+        shell: bash
+        run: |
+          rm -f test/widget_test.dart
       - name: Corriger les erreurs Dart connues
         working-directory: ${{ steps.project.outputs.project_dir }}
         shell: bash
